@@ -8,46 +8,41 @@ sklep = Sklep()
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
-    sklep = Sklep()
     saldo = sklep.konto()
     magazyn = sklep.get_magazyn()
 
     if request.method == 'POST':
         zmiana_saldo = request.form.get('zmiana_saldo')
-        sklep.zmien_saldo(zmiana_saldo)
-        sklep.zapisz_wszystko()
-        return redirect(url_for('index'))
+        if zmiana_saldo:
+            sklep.zmien_saldo(zmiana_saldo)
+            sklep.zapisz_wszystko()
+            return redirect(url_for('index'))
 
     return render_template('index.html', stan_konta=saldo, stan_magazynu=magazyn)
 
 
-@app.route('/zakup', methods=['GET', 'POST'])
+@app.route('/zakup', methods=['POST'])
 def formularz_zakupu():
-    sklep = Sklep()
-    if request.method == 'POST':
-        nazwa_produktu = request.form['nazwa_produktu']
-        cena = float(request.form['cena'])
-        ilosc = int(request.form['ilosc'])
-        sklep.zakup(nazwa_produktu, cena, ilosc)
-        sklep.zapisz_wszystko()
-        return redirect(url_for('index'))
-    return render_template('zakup.html')
+    nazwa_produktu = request.form['nazwa_produktu']
+    cena = float(request.form['cena'])
+    ilosc = int(request.form['ilosc'])
+    sklep.zakup(nazwa_produktu, cena, ilosc)
+    sklep.zapisz_wszystko()
+    return redirect(url_for('index'))
 
 
 @app.route('/sprzedaz', methods=['POST'])
 def formularz_sprzedazy():
-    if request.method == 'POST':
-        nazwa_produktu = request.form['nazwa_produktu']
-        ilosc = int(request.form['ilosc'])
+    nazwa_produktu = request.form['nazwa_produktu']
+    ilosc = int(request.form['ilosc'])
 
-        if nazwa_produktu in sklep.get_magazyn() and sklep.get_magazyn()[nazwa_produktu] >= ilosc:
-            sklep.sprzedaz(nazwa_produktu, ilosc)
-            sklep.zapisz_wszystko()
-        else:
-            return "Nie wystarczająca ilość produktu do sprzedaży lub produkt nie istnieje w magazynie."
+    if nazwa_produktu in sklep.get_magazyn() and sklep.get_magazyn()[nazwa_produktu] >= ilosc:
+        sklep.sprzedaz(nazwa_produktu, ilosc)
+        sklep.zapisz_wszystko()
+    else:
+        return "Nie wystarczająca ilość produktu do sprzedaży lub produkt nie istnieje w magazynie."
 
-        return redirect(url_for('index'))
-    return render_template('sprzedaz.html')
+    return redirect(url_for('index'))
 
 
 @app.route('/historia/')
@@ -78,6 +73,3 @@ def history(start=None, end=None):
 
 if __name__ == "__main__":
     app.run(debug=True)
-
-
-
