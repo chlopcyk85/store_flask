@@ -236,6 +236,7 @@ class Sklep():
             self.zapisz_magazyn()
             self.zapisz_magazyn_ceny()
 
+
 if __name__ == "__main__":
     sklep = Sklep()
     sklep.uruchom_sklep()

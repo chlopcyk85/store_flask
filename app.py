@@ -5,9 +5,10 @@ app = Flask(__name__)
 
 sklep = Sklep()
 
+
 @app.route('/', methods=['GET', 'POST'])
 def index():
-    sklep = Sklep()  # Create a new Sklep instance for each request
+    sklep = Sklep()
     saldo = sklep.konto()
     magazyn = sklep.get_magazyn()
 
@@ -15,9 +16,9 @@ def index():
         zmiana_saldo = request.form.get('zmiana_saldo')
         sklep.zmien_saldo(zmiana_saldo)
         sklep.zapisz_wszystko()
+        return redirect(url_for('index'))
 
     return render_template('index.html', stan_konta=saldo, stan_magazynu=magazyn)
-
 
 
 @app.route('/zakup', methods=['GET', 'POST'])
@@ -28,26 +29,31 @@ def formularz_zakupu():
         cena = float(request.form['cena'])
         ilosc = int(request.form['ilosc'])
         sklep.zakup(nazwa_produktu, cena, ilosc)
-        sklep.zapisz_wszystko()  # Save data after updating
+        sklep.zapisz_wszystko()
         return redirect(url_for('index'))
     return render_template('zakup.html')
 
-# Modify the 'formularz_sprzedazy' route
+
 @app.route('/sprzedaz', methods=['POST'])
 def formularz_sprzedazy():
     if request.method == 'POST':
         nazwa_produktu = request.form['nazwa_produktu']
-        cena = float(request.form['cena'])
         ilosc = int(request.form['ilosc'])
-        sklep.sprzedaz(nazwa_produktu, ilosc)  # Provide both 'nazwa_produktu' and 'ilosc'
-        sklep.zapisz_wszystko()  # Save data after updating
+
+        if nazwa_produktu in sklep.get_magazyn() and sklep.get_magazyn()[nazwa_produktu] >= ilosc:
+            sklep.sprzedaz(nazwa_produktu, ilosc)
+            sklep.zapisz_wszystko()
+        else:
+            return "Nie wystarczająca ilość produktu do sprzedaży lub produkt nie istnieje w magazynie."
+
         return redirect(url_for('index'))
     return render_template('sprzedaz.html')
+
 
 @app.route('/historia/')
 @app.route('/historia/<start>/<end>')
 def history(start=None, end=None):
-    all_history = sklep.get_history()  # Get all history entries
+    all_history = sklep.get_history()
 
     try:
         if start is not None:
